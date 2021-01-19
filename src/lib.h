@@ -25,6 +25,8 @@ void double_to_str(double number, char* dist, size_t count_of_digits_after_decim
 bool is_action(char symbol);
 int get_action_priority(char action);
 
+bool is_have_brackets(char *expression);
+
 void turn_over(char str[]);
 void app_end_to_str(char **str, char symbol);
 

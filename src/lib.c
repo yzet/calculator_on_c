@@ -16,8 +16,9 @@ double calculate_expression(char expresion[])
     //calculate_expression_without_brackeats(expression_copy, -1, strlen(expression_copy) + 1);
     //printf("%s\n", expression_copy);
     char *error;
-    
-    return strtod(expression_copy, &error);
+    double result = strtod(expression_copy, &error);
+    free(expression_copy);
+    return result;
 }
 
 void delete_brackets(char expression[], int index_of_left_bracket, size_t index_of_right_bracket)
@@ -71,6 +72,10 @@ void calculate_expression_without_brackets(char *original_expression, int index_
 
     for (size_t i = index_of_left_bracket + 1; i < strlen(original_expression); i++)
     {
+        if (!is_have_brackets(original_expression) && index_of_left_bracket != -1)
+        {
+            break;
+        }
         if (i == index_of_right_bracket - 1)
             break;
         if (!is_have_next_action(original_expression, i - 1, index_of_right_bracket))
@@ -99,7 +104,7 @@ void calculate_expression_without_brackets(char *original_expression, int index_
             {
                 if (isdigit(original_expression[k]) || original_expression[k] == '.' || (original_expression[k] == '-' && k == index_of_left_bracket + 1) )
                 {
-                    char *buff = (char *)calloc(strlen(left_operand) + 2, sizeof(char));                    
+                    char *buff = (char *)calloc(strlen(left_operand) + 2, sizeof(char));               
                     strcpy(buff, left_operand);
                     int len = strlen(buff);
                     if (len == 0)
@@ -109,6 +114,7 @@ void calculate_expression_without_brackets(char *original_expression, int index_
                     {
                         *(buff + len) = original_expression[k];
                     }
+                    free(left_operand);  
                     left_operand = (char *)calloc(strlen(buff) + 1, sizeof(char));
                     strcpy(left_operand, buff);
                     left_index_of_left_operand = k;
@@ -135,6 +141,7 @@ void calculate_expression_without_brackets(char *original_expression, int index_
                     {
                         *(buff + len) = original_expression[k];
                     }
+                    free(right_operand);
                     right_operand = (char *)calloc(strlen(buff) + 1, sizeof(char));
                     strcpy(right_operand, buff);
                     right_index_of_right_operand = k;
@@ -151,9 +158,15 @@ void calculate_expression_without_brackets(char *original_expression, int index_
             i = index_of_left_bracket;
             action_index = -1;
             action_priority = -1;
-
+            free(left_operand);
+            free(right_operand);
             char* expression_with_result = *form_expression_with_result(&original_expression, result, left_index_of_left_operand, right_index_of_right_operand);
             strcpy(original_expression, expression_with_result);
+            free(expression_with_result);
+            if (index_of_left_bracket != -1)
+            {
+                break;
+            }
             // не всегда становится короче после подсчета (333^2) = 110889
             left_operand = (char*)(calloc(0, sizeof(char)));
             right_operand = (char*)(calloc(0, sizeof(char)));
@@ -436,7 +449,7 @@ bool is_have_next_action(char expression[], int action_index, int right_bracket_
 
 bool is_delete_brackets_pair(char expression[], int left_index_of_left_operand, int right_index_of_right_operand)
 {
-    if (left_index_of_left_operand != -1) // can left_index_of_left_operand == 0?
+    if (left_index_of_left_operand != -1 && left_index_of_left_operand != 0) // can left_index_of_left_operand == 0?
     {
         if (right_index_of_right_operand < strlen(expression) - 1) // because right_index + 1
         {
@@ -462,19 +475,17 @@ void turn_over(char *str)
     }
 }
 
-
-// void app_end_to_str(char** str, char symbol)
-// {
-//     size_t str_len = strlen(*str);
-//     char *buff = (char *)calloc(sizeof(char), str_len + 2);
-//     strcpy(buff, *str);
-//     buff[str_len] = symbol;
-//     buff[str_len + 1] = '\0';
-//     //strcpy(str, buff);
-//     **str = &(*buff);
-//     free(buff);
-// }
-
+bool is_have_brackets(char *expression)
+{
+    for (int i = 0; i < strlen(expression); i++)
+    {
+        if (expression[i] == '(')
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 void print_log(char message[])
 {
