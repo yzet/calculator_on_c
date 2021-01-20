@@ -183,8 +183,10 @@ void calculate_expression_without_brackets(char *original_expression, int index_
         }
         
     }
-    free(left_operand);
-    free(right_operand);
+    // if (left_operand != NULL)
+    //     free(left_operand);
+    // if (right_operand != )
+    //     free(right_operand);
 }
 
 bool is_action(char symbol)
