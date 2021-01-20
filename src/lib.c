@@ -394,6 +394,15 @@ void double_to_str(double number, char* dist, size_t count_of_digits_after_decim
     long int int_and_decimal_part = number * ten_power;
     long int decimal_part = int_and_decimal_part - int_part * ten_power;
 
+    size_t decimal_part_length = get_number_length((double)decimal_part, 0);
+    int count_of_zero_to_decimal = 0;
+
+    if (decimal_part != 0 && decimal_part_length != count_of_digits_after_decimal_point)
+    {
+        count_of_zero_to_decimal = count_of_digits_after_decimal_point - decimal_part_length;
+    }
+
+
     while (decimal_part != 0)
     {
         is_decimal_part_zero = false;
@@ -412,6 +421,12 @@ void double_to_str(double number, char* dist, size_t count_of_digits_after_decim
             }
         }
         decimal_part /= 10;
+    }
+
+    for (int i = 0; i < count_of_zero_to_decimal; i++)
+    {
+        dist[last_index_in_dist] = '0';
+        last_index_in_dist++;
     }
 
     if (!is_decimal_part_zero)
