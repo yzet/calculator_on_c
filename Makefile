@@ -1,5 +1,7 @@
 CC = clang
-C_OPTS = -fsanitize=address -g -Wall -Wextra -Wformat-security -Wfloat-equal -Wshadow -Wconversion -Wlogical-not-parentheses -Wnull-dereference -I./src src/lib.c
+#C_OPTS = -fsanitize=address -g -Wall -Wextra -Wformat-security -Wfloat-equal -Wshadow -Wconversion -Wlogical-not-parentheses -Wnull-dereference -I./src src/lib.c
+C_OPTS = -fsanitize=address -I./src src/lib.c
+
 
 all: clean prep compile
 
