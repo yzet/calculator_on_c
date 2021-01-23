@@ -5,7 +5,7 @@ double calculate_expression(char expresion[])
     char *expression_copy = (char *)calloc(255 + strlen(expresion) + 1, sizeof(char));
     strcpy(expression_copy, expresion);
 
-    delete_brackets(expression_copy, -1, strlen(expression_copy));
+    delete_brackets(expression_copy, -1, strlen(expression_copy) - 1);
 
     char *error;
     double result = strtod(expression_copy, &error);

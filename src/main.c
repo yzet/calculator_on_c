@@ -1,4 +1,5 @@
 #include "lib.h"
+#include <stdio.h>
 
 int main()
 {  
@@ -18,16 +19,33 @@ int main()
     
     while ( true )
     {
-        char input[255];
-        scanf("%s", input);
-        if (input[0] == 'q')
-            break;
+        char input[257];
+        char extra_symbols[257];
+        
+        fgets(input, 256, stdin);
+
+        if (strlen(input) == 255)
+        {
+            printf("String is too long\n");
+            while ( fgets(extra_symbols, 256, stdin) )
+            {
+                size_t extra_symbols_length = strlen(extra_symbols);
+                if (extra_symbols[extra_symbols_length - 1] == '\n')
+                {
+                    break;
+                }
+            }
+        }
         else
         {
-            double result = calculate_expression(input);
-            printf("%s%f%c", " = ", result, '\n');
+            if (input[0] == 'q')
+            break;
+            else
+            {
+                double result = calculate_expression(input);
+                printf("%s%f%c", " = ", result, '\n');
+            }
         }
-        
     }
 
     return 0;
