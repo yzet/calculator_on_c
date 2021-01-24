@@ -1,11 +1,33 @@
 #include "lib.h"
 
-double calculate_expression(char expresion[])
+void delete_brackets(char** expression, int index_of_left_bracket, size_t index_of_right_bracket);
+void calculate_expression_without_brackets(char** original_expression, int index_of_left_bracket, size_t index_of_right_bracket);
+double calculate_simple_expression(char* left_operand, char* right_operand, char action);
+void form_expression_with_result(char **original_expression, double result, int left_index_of_left_operand, int right_index_of_right_operand);
+bool is_have_next_action(char* expression, int action_index, int right_bracket_index);
+bool is_delete_brackets_pair(char* expression, int left_index_of_left_operand, int right_index_of_right_operand);
+
+size_t get_number_length(double number, size_t count_of_digits_after_decimal_point);
+size_t get_index_of_decimal_point(double number);
+void double_to_str(double number, char* dist, size_t count_of_digits_after_decimal_point);
+
+
+bool is_action(char symbol);
+int get_action_priority(char action);
+
+bool is_have_brackets(char* expression);
+
+void turn_over(char* str);
+
+double calculate_expression(char *expresion)
 {
     char *expression_copy = (char *)calloc(255 + strlen(expresion) + 1, sizeof(char));
     strcpy(expression_copy, expresion);
 
-    delete_brackets(expression_copy, -1, strlen(expression_copy) - 1);
+    if (expression_copy[strlen(expression_copy) - 1] == '\n')
+        delete_brackets(&expression_copy, -1, strlen(expression_copy) - 1);
+    else
+        delete_brackets(&expression_copy, -1, strlen(expression_copy));
 
     char *error;
     double result = strtod(expression_copy, &error);
@@ -13,21 +35,23 @@ double calculate_expression(char expresion[])
     return result;
 }
 
-void delete_brackets(char expression[], int index_of_left_bracket, size_t index_of_right_bracket)
+//*((*expression) + i)
+void delete_brackets(char** expression, int index_of_left_bracket, size_t index_of_right_bracket)
 {
     size_t index_of_left_bracket_temp = 0;
     size_t index_of_right_bracket_temp = 0;
     int count_of_opening_brackets = 0;
 
-    for (size_t index_of_symbol = index_of_left_bracket + 1; index_of_symbol < strlen(expression); index_of_symbol++)
+    for (size_t index_of_symbol = index_of_left_bracket + 1; index_of_symbol < strlen(*expression); index_of_symbol++)
     {
-        if (expression[index_of_symbol] == '(')
+        //if (expression[index_of_symbol] == '(')
+        if ( *((*expression) + index_of_symbol) == '(')
         {
             if (count_of_opening_brackets == 0)
                 index_of_left_bracket_temp = index_of_symbol;
             count_of_opening_brackets++;
         }
-        else if (expression[index_of_symbol] == ')')
+        else if (*((*expression) + index_of_symbol) == ')')
         {
             count_of_opening_brackets--;
             if (count_of_opening_brackets == 0)
@@ -46,7 +70,8 @@ void delete_brackets(char expression[], int index_of_left_bracket, size_t index_
     calculate_expression_without_brackets(expression, index_of_left_bracket, index_of_right_bracket);
 }
 
-void calculate_expression_without_brackets(char *original_expression, int index_of_left_bracket, size_t index_of_right_bracket)
+//*((*original_expression) + i)
+void calculate_expression_without_brackets(char** original_expression, int index_of_left_bracket, size_t index_of_right_bracket)
 {
     int last_action_index = -1;
     int last_action_priority = -2;
@@ -60,30 +85,31 @@ void calculate_expression_without_brackets(char *original_expression, int index_
     is_right_and_left_operands_freed = false;
 
     int left_index_of_left_operand = -1;
-    size_t right_index_of_right_operand = strlen(original_expression) + 1;
+    size_t right_index_of_right_operand = strlen(*original_expression) + 1;
 
-    for (size_t i = index_of_left_bracket + 1; i < strlen(original_expression); i++)
+    for (size_t i = index_of_left_bracket + 1; i < strlen(*original_expression); i++)
     {
-        if (!is_have_brackets(original_expression) && index_of_left_bracket != -1)
+        if (!is_have_brackets(*original_expression) && index_of_left_bracket != -1)
         {
             break;
         }
         if (i == index_of_right_bracket - 1)
             break;
-        if (!is_have_next_action(original_expression, i - 1, index_of_right_bracket))
+        if (!is_have_next_action(*original_expression, i - 1, index_of_right_bracket))
         {
             break;
         }
-        if (is_action(original_expression[i]) && i != index_of_left_bracket + 1)
+        //if (is_action(original_expression[i]) && i != index_of_left_bracket + 1)
+        if (is_action(*((*original_expression) + i)) && i != index_of_left_bracket + 1)
         {
             action_index = i;
-            action_priority = get_action_priority(original_expression[action_index]);
-            if (original_expression[i + 1] == '(' || original_expression[i + 1] == ')')
+            action_priority = get_action_priority(*((*original_expression) + i));
+            if (*((*original_expression) + i + 1) == '(' || *((*original_expression) + i + 1) == ')')
                 break;
         }
-        if (last_action_priority >= action_priority || !is_have_next_action(original_expression, i, index_of_right_bracket))
+        if (last_action_priority >= action_priority || !is_have_next_action(*original_expression, i, index_of_right_bracket))
         {
-            if (!(is_have_next_action(original_expression, i, index_of_right_bracket)) && last_action_priority < action_priority)
+            if (!(is_have_next_action(*original_expression, i, index_of_right_bracket)) && last_action_priority < action_priority)
             {
                 last_action_priority = action_priority;
                 last_action_index = action_index;
@@ -94,18 +120,23 @@ void calculate_expression_without_brackets(char *original_expression, int index_
             }
             for (int k = last_action_index - 1; k >= 0; k--)
             {
-                if (isdigit(original_expression[k]) || original_expression[k] == '.' || (original_expression[k] == '-' && k == index_of_left_bracket + 1))
+                //if (isdigit(*((*original_expression) + k)) || original_expression[k] == '.' || (original_expression[k] == '-' && k == index_of_left_bracket + 1))
+                if (isdigit(*((*original_expression) + k)) || *((*original_expression) + k) == '.' || (*((*original_expression) + k) == '-' && k == index_of_left_bracket + 1))
                 {
                     char *buff = (char *)calloc(strlen(left_operand) + 2, sizeof(char));
                     strcpy(buff, left_operand);
                     int len = strlen(buff);
                     if (len == 0)
                     {
-                        buff[0] = original_expression[k];
+                        //buff[0] = original_expression[k];
+                        buff[0] = *((*original_expression) + k);
+
                     }
                     else
                     {
-                        *(buff + len) = original_expression[k];
+                        //*(buff + len) = original_expression[k];
+                        *(buff + len) = *((*original_expression) + k);
+
                     }
                     free(left_operand);
                     left_operand = (char *)calloc(strlen(buff) + 1, sizeof(char));
@@ -120,20 +151,24 @@ void calculate_expression_without_brackets(char *original_expression, int index_
             }
             turn_over(left_operand);
 
-            for (size_t k = last_action_index + 1; k < strlen(original_expression); k++)
+            //for (size_t k = last_action_index + 1; k < strlen(original_expression); k++)
+            for (size_t k = last_action_index + 1; k < strlen(*original_expression); k++)
             {
-                if (isdigit(original_expression[k]) || original_expression[k] == '.' || (original_expression[k] == '-' && k == last_action_index + 1))
+                // if (isdigit(original_expression[k]) || original_expression[k] == '.' || (original_expression[k] == '-' && k == last_action_index + 1))
+                if (isdigit(*((*original_expression) + k)) || *((*original_expression) + k) == '.' || (*((*original_expression) + k) == '-' && k == last_action_index + 1))
                 {
                     char *buff = (char *)calloc(strlen(right_operand) + 2, sizeof(char));
                     strcpy(buff, right_operand);
                     int len = strlen(buff);
                     if (len == 0)
                     {
-                        buff[0] = original_expression[k];
+                        //buff[0] = original_expression[k];
+                        buff[0] = *((*original_expression) + k);
                     }
                     else
                     {
-                        *(buff + len) = original_expression[k];
+                        // *(buff + len) = original_expression[k];
+                        *(buff + len) =  *((*original_expression) + k);
                     }
                     free(right_operand);
                     right_operand = (char *)calloc(strlen(buff) + 1, sizeof(char));
@@ -146,7 +181,8 @@ void calculate_expression_without_brackets(char *original_expression, int index_
                     break;
                 }
             }
-            double result = calculate_simple_expression(left_operand, right_operand, original_expression[last_action_index]);
+            // double result = calculate_simple_expression(left_operand, right_operand, original_expression[last_action_index]);
+            double result = calculate_simple_expression(left_operand, right_operand, *((*original_expression) + last_action_index));
             is_right_and_left_operands_freed = false;
             last_action_index = -1;
             last_action_priority = -2;
@@ -156,9 +192,10 @@ void calculate_expression_without_brackets(char *original_expression, int index_
             free(left_operand);
             free(right_operand);
             is_right_and_left_operands_freed = true;
-            char *expression_with_result = *form_expression_with_result(&original_expression, result, left_index_of_left_operand, right_index_of_right_operand);
-            strcpy(original_expression, expression_with_result);
-            free(expression_with_result);
+            //char *expression_with_result = *form_expression_with_result(original_expression, result, left_index_of_left_operand, right_index_of_right_operand);
+            //strcpy(original_expression, expression_with_result);
+            //free(expression_with_result);
+            form_expression_with_result(original_expression, result, left_index_of_left_operand, right_index_of_right_operand);
             if (index_of_left_bracket != -1)
             {
                 break;
@@ -169,7 +206,8 @@ void calculate_expression_without_brackets(char *original_expression, int index_
         }
         else
         {
-            if (is_action(original_expression[i]))
+            // if (is_action(original_expression[i]))
+            if (is_action(*((*original_expression) + i)))
             {
                 last_action_index = action_index;
                 last_action_priority = action_priority;
@@ -218,30 +256,42 @@ int get_action_priority(char action)
     }
 }
 
-double calculate_simple_expression(char left_operand[], char right_operand[], char action)
+double calculate_simple_expression(char* left_operand, char* right_operand, char action)
 {
     char **end;
     double left_operand_d = strtod(left_operand, end); // may be error
     double right_operand_d = strtod(right_operand, end);
+    //double result = 0.0;
 
     switch (action)
     {
     case '^':
+        //result = pow(left_operand_d, right_operand_d);
         return pow(left_operand_d, right_operand_d);
+        break;
     case '*':
+        //result = (left_operand_d * right_operand_d);
         return (left_operand_d * right_operand_d);
+        break;
     case '/':
+        //result = (left_operand_d / right_operand_d);
         return (left_operand_d / right_operand_d);
+        break;
     case '+':
+        //result = (left_operand_d + right_operand_d);
         return (left_operand_d + right_operand_d);
+        break;
     case '-':
+        //result = (left_operand_d - right_operand_d);
         return (left_operand_d - right_operand_d);
+        break;
     default:
         break;
     }
+    return 0.0;
 }
 
-char **form_expression_with_result(char **original_expression, double result, int left_index_of_left_operand, int right_index_of_right_operand)
+void form_expression_with_result(char **original_expression, double result, int left_index_of_left_operand, int right_index_of_right_operand)
 {
     size_t count_of_numbers_after_decimal_point = 5;
 
@@ -284,7 +334,9 @@ char **form_expression_with_result(char **original_expression, double result, in
     }
 
     free(result_str);
-    return (&new_expression);
+    free(*original_expression);
+    *original_expression = (char *)new_expression;
+    //return (&new_expression);
 }
 
 size_t get_number_length(double number, size_t count_of_digits_after_decimal_point)
@@ -413,7 +465,7 @@ void double_to_str(double number, char *dist, size_t count_of_digits_after_decim
     turn_over(dist);
 }
 
-bool is_have_next_action(char expression[], int action_index, int right_bracket_index)
+bool is_have_next_action(char* expression, int action_index, int right_bracket_index)
 {
     size_t expression_length = strlen(expression);
 
@@ -431,7 +483,7 @@ bool is_have_next_action(char expression[], int action_index, int right_bracket_
     return false;
 }
 
-bool is_delete_brackets_pair(char expression[], int left_index_of_left_operand, int right_index_of_right_operand)
+bool is_delete_brackets_pair(char* expression, int left_index_of_left_operand, int right_index_of_right_operand)
 {
     if (left_index_of_left_operand != -1 && left_index_of_left_operand != 0)
     {
